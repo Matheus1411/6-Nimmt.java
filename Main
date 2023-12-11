@@ -1,0 +1,154 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("\n    ===== SEJA BEM-VINDO AO 6 NIMMT! =====\n\n");
+        System.out.println(
+                "O 6 nimmt é um jogo de cartas simples, mas estratégico! Seu objetivo será *NÃO* colecionar as cartas do baralho para vencer! \nAqui vão as principais regras e funcionamentos: \n");
+        System.out.println("1- O jogo é composto por 109 cartas, cada uma possui um número de 1 à 109.");
+        System.out.println("2- Pode ser jogado entre 3 à 6 jogadores.");
+        System.out.println("3- O tabuleiro possui 5 linhas e 5 colunas, formando assim os 25 espaços para as cartas.");
+        System.out.println("4- Cada carta vale 1 ponto, com as seguinte exceções: ");
+        System.out.println("     * Cartas terminadas com o dígito 5 valem 1 ponto extra(5,15,25...).");
+        System.out.println("     * Cartas múltiplas de 10 valem 2 pontos extras (10,20,30...). ");
+        System.out.println("     * Cartas com dois dígitos repetidos valem 4 pontos extras (11,22,33...). ");
+        System.out.println(
+                "5- O jogador seleciona a carta para a rodada, e ela é automaticamente inserida ao lado da carta com valor mais próximo à ela. Caso não tenha nenhuma com valor maior, ela é inserida no início da fileira.");
+        System.out.println(
+                "6- O jogador que inserir a carta na última coluna ou na primeira, coleta todas as cartas da fileira!\n\n");
+
+        int quantidadeJogadores = 0;
+
+        // Solicitar a quantidade de jogadores (de 3 a 6)
+        while (quantidadeJogadores < 3 || quantidadeJogadores > 6) {
+            System.out.println("       Vamos começar!\nDigite a quantidade de jogadores (de 3 a 6): ");
+            quantidadeJogadores = scanner.nextInt();
+
+            if (quantidadeJogadores < 3 || quantidadeJogadores > 6) {
+                System.out.println("*Número de jogadores inválido.* Por favor, digite um número entre 3 e 6.\n");
+            }
+        }
+
+        scanner.nextLine();
+
+        // lista para armazenar os jogadores
+        List<Jogador> jogadores = new ArrayList<>();
+        for (int i = 1; i <= quantidadeJogadores; i++) {
+            System.out.print("Digite o nome do jogador " + i + ": ");
+            String nomeJogador = scanner.nextLine();
+
+            // instancio o objeto jogador, e insiro na lista jogadores
+            Jogador jogador = new Jogador(nomeJogador, scanner);
+            jogadores.add(jogador);
+        }
+
+        System.out.println("\nLISTA DE JOGADORES:\n");
+        for (Jogador jogador : jogadores) {
+            System.out.println("* " + jogador.getNome() + "\n");
+        }
+        System.out.println("INICIANDO O GAME...\n");
+
+        // Cria um baralho
+        List<Carta> baralho = criarBaralho();
+
+        // Cria um tabuleiro
+        Tabuleiro tabuleiro = new Tabuleiro();
+
+        // Sortear e posicionar as cartas iniciais
+        tabuleiro.sortearCartasIniciais(baralho);
+        tabuleiro.exibirTabuleiro();
+
+        System.out.println("Baralho Completo:");
+        for (Carta carta : baralho) {
+            System.out.print(carta.getNumero() + " ");
+        }
+
+        distribuirCartasIniciais(jogadores, baralho);
+
+        // Iniciar os turnos
+        for (int turno = 1; turno <= 6; turno++) { 
+            System.out.println("\n===== TURNO " + turno + " =====\n");
+
+            // Iterar sobre os jogadores e realizar as jogadas
+            for (Jogador jogador : jogadores) {
+                System.out.println("É a vez de " + jogador.getNome() + "!\n");
+                jogador.exibirMao();
+                Carta cartaEscolhida = jogador.escolherCarta();
+                tabuleiro.posicionarCarta(cartaEscolhida, jogador);
+                tabuleiro.exibirTabuleiro();
+            }
+
+            // Coletar as cartas da fileira ao final de cada turno
+            //System.out.println("Digite o número da linha que deseja coletar: ");
+            //int numeroLinhaDesejada = scanner.nextInt();
+            //List<Carta> cartasDaFileira = tabuleiro.coletarCartasDaLinha(numeroLinhaDesejada);
+
+            // Calcular e exibir a pontuação no final de cada turno
+            for (Jogador jogador : jogadores) {
+                jogador.exibirPontuacaoTotal();
+            }
+
+            // Exibir o tabuleiro ao final de cada turno
+            tabuleiro.exibirTabuleiro();
+            //System.out.println("Baralho Completo:");
+            //for (Carta carta : baralho) {
+                //System.out.print(carta.getNumero() + " ");
+            //}
+        }
+
+        exibirResultadosFinais(jogadores);
+    }
+
+    // Adicionando o método para distribuir cartas iniciais
+    private static void distribuirCartasIniciais(List<Jogador> jogadores, List<Carta> baralho) {
+        Collections.shuffle(baralho);
+
+        for (Jogador jogador : jogadores) {
+            for (int i = 0; i < 12; i++) {
+                Carta cartaDistribuida = baralho.remove(0);
+                jogador.receberCarta(cartaDistribuida);
+            }
+        }
+    }
+
+    private static List<Carta> criarBaralho() {
+        List<Carta> baralho = new ArrayList<>();
+        for (int i = 1; i <= 109; i++) {
+            baralho.add(new Carta(i));
+        }
+        return baralho;
+    }
+
+    // Método para exibir os resultados finais
+    private static void exibirResultadosFinais(List<Jogador> jogadores) {
+        System.out.println("\n===== RESULTADOS FINAIS =====\n");
+
+        // Calcular pontuação final e exibir resultados
+        for (Jogador jogador : jogadores) {
+            jogador.calcularPontuacao();
+            System.out.println(jogador.getNome() + " fez " + jogador.calcularPontuacao() + " ponto(s) no total!");
+        }
+
+        Jogador vencedor = encontrarVencedor(jogadores);
+        System.out.println("\n*** " + vencedor.getNome().toUpperCase() + " É O VENCEDOR! PARABÉNS! ***");
+    }
+
+    // Método para encontrar o vencedor
+    private static Jogador encontrarVencedor(List<Jogador> jogadores) {
+        Jogador vencedor = jogadores.get(0);
+
+        for (Jogador jogador : jogadores) {
+            if (jogador.calcularPontuacao() < vencedor.calcularPontuacao()) {
+                vencedor = jogador;
+            }
+        }
+
+        return vencedor;
+    }
+}
